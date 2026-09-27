@@ -1,0 +1,125 @@
+{
+  "name": "HabitTrackerSystem",
+  "state": {
+    "type": "json_schema",
+    "json_schema": {
+      "type": "object",
+      "required": [
+        "habit_tracker_spec"
+      ],
+      "properties": {
+        "api_spec": {
+          "type": "string"
+        },
+        "db_schema": {
+          "type": "string"
+        },
+        "final_report": {
+          "type": "string"
+        },
+        "streak_logic": {
+          "type": "string"
+        },
+        "qa_test_suite": {
+          "type": "string"
+        },
+        "habit_tracker_spec": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "schema": "crewai.flow/v1",
+  "methods": {
+    "design_rest_api": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "goal": "Design a complete REST API specification for the Habit Tracker system, aligned with the PostgreSQL schema and streak logic.",
+          "role": "Backend API Engineer",
+          "input": "Design the REST API for the Habit Tracker system using the schema and streak logic below.\n\nDatabase Schema:\n${outputs.design_database_schema.raw}\n\nStreak Logic:\n${outputs.implement_streak_logic.raw}\n\nEndpoints to cover:\n- Create a habit (POST /habits)\n- List all habits for a user (GET /habits)\n- Get a single habit (GET /habits/{id})\n- Log a habit entry with status COMPLETED, SKIPPED, or MISSED (POST /habits/{id}/entries)\n- Get habit entries for a date range (GET /habits/{id}/entries)\n- Get current streak for a habit (GET /habits/{id}/streak)\n- Skip a day explicitly (POST /habits/{id}/skip)\n- Delete a habit (DELETE /habits/{id})\n\nFor each endpoint provide: HTTP method and path, request body or query params, response body with example JSON, HTTP status codes, and any business rule notes (especially streak-related behaviour).\n\nExpected output: A full REST API specification in OpenAPI-style format covering all endpoints. Each endpoint must include method, path, request schema, response schema with example JSON, status codes, and notes on streak interactions. If upstream inputs were missing or empty, output: NO DATA: upstream design documents returned nothing",
+          "verbose": true,
+          "backstory": "You are a senior backend engineer experienced in designing RESTful APIs for production systems. You design APIs strictly from the schema and logic documents provided in your input \\ u2014 you never invent endpoints, fields, or behaviours that are not grounded in them. If either input is missing or contains NO DATA, output: NO DATA: upstream design documents returned nothing",
+          "inject_date": true,
+          "llm": "openai/gpt-5.6-luna"
+        }
+      },
+      "start": false,
+      "listen": "implement_streak_logic",
+      "router": false,
+      "description": "Backend API Engineer designs REST endpoints aligned with the schema and streak logic."
+    },
+    "compile_final_report": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "goal": "Consolidate all Habit Tracker system design documents into a single, well-structured deliverable report.",
+          "role": "Technical Documentation Lead",
+          "input": "Compile a single deliverable document for the Habit Tracker system from the four sections below.\n\n--- SECTION 1: DATABASE SCHEMA ---\n${outputs.design_database_schema.raw}\n\n--- SECTION 2: STREAK LOGIC ---\n${outputs.implement_streak_logic.raw}\n\n--- SECTION 3: REST API SPECIFICATION ---\n${outputs.design_rest_api.raw}\n\n--- SECTION 4: QA TEST SUITE ---\n${outputs.qa_edge_case_testing.raw}\n\nFormat the final report with:\n- A cover summary (2-3 sentences describing what was built and why)\n- A table of contents\n- Each section clearly headed and formatted\n- A closing notes section highlighting any open questions, assumptions, or items needing review\n\nIf any section contains NO DATA, note it explicitly in the report under that section heading.\n\nExpected output: A complete, formatted technical deliverable document for the Habit Tracker system containing all four sections: database schema, streak logic, REST API specification, and QA test suite. The document must have a cover summary, table of contents, clearly headed sections, and a closing notes section. Any missing section must be explicitly flagged rather than filled with invented content.",
+          "verbose": true,
+          "backstory": "You are a senior technical writer and documentation lead who compiles engineering artefacts into clear, navigable deliverables for development teams. You work only from the documents provided in your input and never add content, assumptions, or examples that are not present in those documents. If any section is missing or contains NO DATA, you clearly note which section is unavailable in the final report rather than substituting invented content.",
+          "inject_date": true,
+          "llm": "openai/gpt-5.6-luna"
+        }
+      },
+      "start": false,
+      "listen": "qa_edge_case_testing",
+      "router": false,
+      "description": "Consolidates all outputs — schema, streak logic, API spec, and QA test suite — into a single final deliverable document."
+    },
+    "qa_edge_case_testing": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "goal": "Write a comprehensive test suite for the Habit Tracker system, focusing on streak edge cases and state transitions.",
+          "role": "QA Engineer",
+          "input": "Write the QA test suite for the Habit Tracker system using the documents below.\n\nDatabase Schema:\n${outputs.design_database_schema.raw}\n\nStreak Logic:\n${outputs.implement_streak_logic.raw}\n\nREST API Spec:\n${outputs.design_rest_api.raw}\n\nFocus areas:\n1. Consecutive SKIPPED days between two COMPLETED entries \\ u2014 streak must be preserved\n2. Streak boundary: first entry ever, streak starting from day 1\n3. MISSED day after a long streak \\ u2014 streak resets to 0\n4. Multiple consecutive MISSed days\n5. SKIPPED day followed immediately by MISSED day\n6. Logging an entry for a past date (backdating)\n7. Logging a duplicate entry for the same habit on the same day\n8. Longest streak correctly updated vs current streak after reset\n9. Empty habit (no entries) \\ u2014 streak returns 0\n10. API error cases: invalid status value, missing required fields, non-existent habit ID\n\nFor each test case provide: test ID, scenario description, preconditions, steps, expected result, and pass/fail criteria.\n\nExpected output: A structured QA test suite with at least 10 numbered test cases. Each test must include: test ID, scenario name, preconditions, step-by-step actions, expected result, and pass/fail criteria. If upstream inputs were missing or empty, output: NO DATA: upstream documents returned nothing",
+          "verbose": true,
+          "backstory": "You are a senior QA engineer who specialises in edge case analysis for stateful systems. You write tests strictly grounded in the schema, streak logic, and API spec provided in your input \\ u2014 you never invent behaviours or assumptions not present in those documents. If any input is missing or contains NO DATA, output: NO DATA: upstream documents returned nothing",
+          "inject_date": true,
+          "llm": "openai/gpt-5.6-luna"
+        }
+      },
+      "start": false,
+      "listen": "design_rest_api",
+      "router": false,
+      "description": "QA Engineer writes and documents test cases covering edge cases: consecutive skips, streak boundaries, missing days, and state transitions."
+    },
+    "design_database_schema": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "goal": "Design a production-grade PostgreSQL schema for a Habit Tracker system.",
+          "role": "Database Architect",
+          "input": "Design a complete PostgreSQL schema for this Habit Tracker project:\n\n${state.habit_tracker_spec}\n\nRequirements:\n- Tables for: habits, habit_entries, streaks\n- Each habit_entry must support a status field with values: COMPLETED, SKIPPED, MISSED\n- The schema must support querying current streaks, historical entries, and per-habit statistics\n- Include primary keys, foreign keys, indexes, and constraints\n- Add comments on each table and column explaining its purpose\n\nExpected output: A complete, annotated PostgreSQL schema with CREATE TABLE statements, indexes, constraints, and inline comments. Every table and column must have a clear explanation of its role. If the input spec was missing or empty, output: NO DATA: habit_tracker_spec returned nothing",
+          "verbose": true,
+          "backstory": "You are a senior database architect with deep expertise in PostgreSQL and relational data modeling. You work strictly from the project specification provided in your input — you never invent tables, fields, or relationships that are not grounded in the spec. If the spec is missing or empty, you output: NO DATA: habit_tracker_spec returned nothing",
+          "inject_date": true,
+          "llm": "openai/gpt-5.6-luna"
+        }
+      },
+      "start": true,
+      "router": false,
+      "description": "Database Architect agent designs the PostgreSQL schema for the habit tracker system."
+    },
+    "implement_streak_logic": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "goal": "Define precise streak calculation rules for a Habit Tracker system, handling COMPLETED, SKIPPED, and MISSED states correctly.",
+          "role": "Logic Engineer",
+          "input": "Using the database schema below, define the complete streak logic for the Habit Tracker system.\n\nDatabase Schema:\n${outputs.design_database_schema.raw}\n\nStreak Rules to implement:\n1. COMPLETED entry: extends the active streak by 1 day\n2. SKIPPED entry: is neutral \\ u2014 neither resets nor extends the streak (the streak is paused for that day)\n3. MISSED entry (no entry or explicit MISSED): resets the streak to 0\n4. A streak starts fresh from the next COMPLETED day after a reset\n5. Consecutive SKIPs between two COMPLETED days preserve the streak\n6. Define how current_streak, longest_streak, and last_completed_date are calculated\n7. Include pseudocode or SQL logic for the streak computation algorithm\n\nExpected output: A detailed streak logic specification including: state transition rules, a day-by-day streak calculation algorithm (in pseudocode or SQL), examples covering consecutive SKIPs, streak boundaries, and resets, and the exact update logic for current_streak and longest_streak fields. If the schema input was missing or empty, output: NO DATA: database schema returned nothing",
+          "verbose": true,
+          "backstory": "You are a senior software engineer specialising in business rule design and state machine logic. You work only from the schema and specification provided in your input \\ u2014 you never invent rules that are not grounded in them. If the schema input is missing or contains NO DATA, output: NO DATA: database schema returned nothing",
+          "inject_date": true,
+          "llm": "openai/gpt-5.6-luna"
+        }
+      },
+      "start": false,
+      "listen": "design_database_schema",
+      "router": false,
+      "description": "Logic Engineer agent defines streak rules with SKIPPED state treated as neutral (neither resets nor extends the streak)."
+    }
+  },
+  "description": "Multi-agent workflow that designs a complete Habit Tracker system: PostgreSQL schema, streak logic with SKIPPED state support, REST API endpoints, QA edge-case tests, and a compiled final deliverable."
+}
