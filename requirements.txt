@@ -1,0 +1,4 @@
+crewai
+fastapi
+psycopg2-binary
+pytest
